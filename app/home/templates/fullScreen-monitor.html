@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>实时监控画面</title>
+    <style type="text/css">
+        div#div1{
+            position:fixed;
+            top:0;
+            left:0;
+            bottom:0;
+            right:0;
+            z-index:-1;
+        }
+        div#div1 > img {
+            height:100%;
+            width:100%;
+            border:0;
+        }
+    </style>
+</head>
+<body>
+    <div id="div1"><img src="{{url_for('home_blueprint.live_camera')}}" /></div>
+</body>
+</html>

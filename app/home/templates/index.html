@@ -1,0 +1,182 @@
+{% extends "base_site.html" %}
+
+{% block title %} Dashboard {% endblock title %}
+
+{% block content %}
+
+<!-- Content Header (Page header) -->
+<section class="content-header">
+    <h1>
+        控制面板
+    </h1>
+
+    <ol class="breadcrumb">
+        <li><a href="#"><i class="fa fa-dashboard"></i> 首页</a></li>
+    </ol>
+</section>
+<!-- Main content -->
+<section class="content">
+
+    <!-- Small boxes (Stat box) -->
+    <div class="row">
+        <div class="col-lg-3 col-xs-6">
+            <!-- small box -->
+            <div class="small-box bg-aqua" id="one">
+                <div class="inner" id="temp">
+                    <h3 id="tem">---</h3>
+
+                    <p>温度</p>
+                </div>
+            </div>
+        </div>
+        <!-- ./col -->
+        <div class="col-lg-3 col-xs-6">
+            <!-- small box -->
+            <div class="small-box bg-green" id="two">
+                <div class="inner" id="mq2">
+                    <h3 id="MQ9">---<sup style="font-size: 20px"></sup></h3>
+
+                    <p>湿度</p>
+                </div>
+                </div>
+        </div>
+        <!-- ./col -->
+        <div class="col-lg-3 col-xs-6">
+            <!-- small box -->
+            <div class="small-box bg-yellow" id="three">
+                <div class="inner" id="aircondition">
+                    <h3 id="MQ135">---</h3>
+
+                    <p>风速</p>
+                </div>
+                </div>
+        </div>
+        <!-- ./col -->
+        <div class="col-lg-3 col-xs-6">
+            <!-- small box -->
+            <div class="small-box bg-red" id="four">
+                <div class="inner" id="wine">
+                    <h3 id="MQ3">---</h3>
+
+                    <p>风向</p>
+                </div>
+                </div>
+        </div>
+        <!-- ./col -->
+    </div>
+    <!-- /.row -->
+    <!-- Main row -->
+    <div class="row" style="text-align: center; margin:0 auto; width:700px; height:500px; border:1px ">
+        <!-- Left col -->
+
+        <!-- /.Left col -->
+        <!-- right col (We are only adding the ID to make the widgets sortable)-->
+        <section class="col-lg-12 connectedSortable">
+
+            <!-- Map box -->
+            <div class="box box-solid bg-light-blue-gradient">
+                <div class="box-header">
+                    <!-- tools box -->
+                    <div class="pull-right box-tools">
+
+                        <a href="/fullScreen-monitor" class="btn btn-primary btn-sm pull-right"
+                           style="margin-right: 5px;">
+                            <i class="fa fa-fw fa-arrows-alt"></i>
+                        </a>
+                        <button type="button" class="btn btn-primary btn-sm pull-right" data-widget="collapse"
+                                data-toggle="tooltip" title="Collapse" style="margin-right: 5px;">
+                            <i class="fa fa-minus"></i>
+                        </button>
+
+                    </div>
+                    <!-- /. tools -->
+
+                    <i class="fa fa-map-marker"></i>
+
+                    <h3 class="box-title">
+                        实时监控画面
+                    </h3>
+                </div>
+                <div class="box-body">
+                    <div class="media" id="live-video">
+                        <img src="{{url_for('home_blueprint.live_camera')}}" height="450px" width="100%">
+                    </div>
+                </div>
+
+
+        </section>
+        <!-- right col -->
+    </div>
+    <!-- /.row (main row) -->
+
+</section>
+<!-- /.content -->
+
+{% endblock content %}
+
+
+{% block stylesheets %}
+<!-- Specific CSS goes HERE -->
+{% endblock %}
+
+{% block javascripts %}
+
+
+<script type="text/javascript" src="//cdn.bootcss.com/socket.io/1.5.1/socket.io.min.js"></script>
+<script type="text/javascript" charset="utf-8">
+
+
+        $.ajax({
+        url: "/init_sensorData",   //对应flask中的路由
+        type: "POST", //请求方法
+        data: JSON.stringify({"request": "latest"}),   //传送的数据
+        dataType: "json", //传送的数据类型
+        success: function (data) {
+            if (data.time) {
+                $("#tem").empty();
+                $("#tem").append(data.temp + '℃');
+                $("#MQ9").empty();
+                $("#MQ9").append(data.humidity + '%rh');
+                $("#MQ135").empty();
+                $("#MQ135").append(data.windSpeed + 'm/s');
+                $("#MQ3").empty();
+                $("#MQ3").append(data.windDirect + '°');
+            }
+        }
+    })
+
+
+    $(document).ready(function () {
+        var socket = io.connect('http://' + document.domain + ':' + location.port);
+
+        socket.on('test', function (data) {
+            console.log(data);
+        })
+
+
+        socket.on('mqtt_message', function (data) {
+            sensorData = data;
+            console.log(data);
+            console.log("this is message!");
+            console.log(data.time);
+            console.log(data.humidity)
+            if (data.time) {
+                $("#tem").empty();
+                $("#tem").append(data.temp + '℃');
+                $("#MQ9").empty();
+                $("#MQ9").append(data.humidity + '%rh');
+                $("#MQ135").empty();
+                $("#MQ135").append(data.windSpeed + 'm/s');
+                $("#MQ3").empty();
+                $("#MQ3").append(data.windDirect + '°');
+            }
+        })
+    });
+</script>
+
+<!-- AdminLTE dashboard demo (This is only for demo purposes) -->
+<script src="/static/assets/js/pages/dashboard.js"></script>
+<!-- AdminLTE for demo purposes -->
+<script src="/static/assets/js/demo.js"></script>
+
+{% endblock %}

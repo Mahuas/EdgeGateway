@@ -1,0 +1,519 @@
+{% extends "base_site.html" %}
+
+{% block title %} Flot Charts {% endblock title %}
+
+{% block stylesheets %}
+<!-- Specific CSS goes HERE -->
+{% endblock %}
+
+{% block content %}
+
+<!-- Content Header (Page header) -->
+<section class="content-header">
+    <h1>
+        传感器数据
+
+    </h1>
+    <select id="time-selection" class="form-control select2 inline center-block" style="width: 80%;">
+        <option selected="selected">1h</option>
+        <option>2h</option>
+        <option>3h</option>
+        <option>6h</option>
+        <option>12h</option>
+        <option>24h</option>
+        <option>2 days ago</option>
+        <option>7 days ago</option>
+        <option>14 days ago</option>
+        <option>30 days ago</option>
+    </select>
+    <td>
+        <button type="button" id="download_data" class="btn btn-block btn-primary pull-right" style="width: 20%;" onclick="download()">导出数据
+        </button>
+    </td>
+    <ol class="breadcrumb">
+        <li><a href="#"><i class="fa fa-dashboard"></i> Home</a></li>
+        <li><a href="#">Charts</a></li>
+        <li class="active">Flot</li>
+    </ol>
+</section>
+
+<!-- Main content -->
+<section class="content">
+
+
+    <!-- 温度 -->
+
+    <div class="row">
+        <div class="col-xs-12">
+            <!-- Line chart -->
+            <div class="box box-primary">
+                <div class="box-header with-border">
+                    <i class="fa fa-bar-chart-o"></i>
+                    <h3 class="box-title">温度</h3>
+                    <div class="box-tools">
+                        <button type="button" class="btn btn-box-tool" data-widget="collapse"><i
+                                class="fa fa-minus"></i></button>
+                        <button type="button" class="btn btn-box-tool" data-widget="remove"><i class="fa fa-times"></i>
+                        </button>
+                    </div>
+
+                </div>
+                <div class="box-body">
+                    <div id="temperature" style="height: 300px;"></div>
+                </div>
+                <!-- /.box-body-->
+            </div>
+            <!-- /.box -->
+
+        </div>
+        <!-- /.col -->
+    </div>
+    <!-- /.row -->
+
+    <!-- 湿度 -->
+    <div class="row">
+        <div class="col-xs-12">
+            <!-- Line chart -->
+            <div class="box box-primary">
+                <div class="box-header with-border">
+                    <i class="fa fa-bar-chart-o"></i>
+
+                    <h3 class="box-title">湿度</h3>
+                    <div class="box-tools">
+                        <button type="button" class="btn btn-box-tool" data-widget="collapse"><i
+                                class="fa fa-minus"></i></button>
+                        <button type="button" class="btn btn-box-tool" data-widget="remove"><i class="fa fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="box-body">
+                    <div id="humidity" style="height: 300px;"></div>
+                </div>
+                <!-- /.box-body-->
+            </div>
+            <!-- /.box -->
+
+        </div>
+        <!-- /.col -->
+    </div>
+    <!-- /.row -->
+
+
+    <!-- 风速 -->
+    <div class="row">
+        <div class="col-xs-12">
+            <!-- Line chart -->
+            <div class="box box-primary">
+                <div class="box-header with-border">
+                    <i class="fa fa-bar-chart-o"></i>
+
+                    <h3 class="box-title">风速</h3>
+                    <div class="box-tools pull-right">
+                        <button type="button" class="btn btn-box-tool" data-widget="collapse"><i
+                                class="fa fa-minus"></i></button>
+                        <button type="button" class="btn btn-box-tool" data-widget="remove"><i class="fa fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="box-body">
+                    <div id="wind-speed" style="height: 300px;"></div>
+                </div>
+                <!-- /.box-body-->
+            </div>
+            <!-- /.box -->
+
+        </div>
+        <!-- /.col -->
+    </div>
+    <!-- /.row -->
+
+
+    <!-- 风向 -->
+    <div class="row">
+        <div class="col-xs-12">
+            <!-- Line chart -->
+            <div class="box box-primary">
+                <div class="box-header with-border">
+                    <i class="fa fa-bar-chart-o"></i>
+
+                    <h3 class="box-title">风向</h3>
+                    <div class="box-tools pull-right">
+                        <button type="button" class="btn btn-box-tool" data-widget="collapse"><i
+                                class="fa fa-minus"></i></button>
+                        <button type="button" class="btn btn-box-tool" data-widget="remove"><i class="fa fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="box-body">
+                    <div id="wind-direction" style="height: 300px;"></div>
+                </div>
+                <!-- /.box-body-->
+            </div>
+            <!-- /.box -->
+
+        </div>
+        <!-- /.col -->
+    </div>
+    <!-- /.row -->
+
+
+</section>
+<!-- /.content -->
+
+{% endblock content %}
+
+{% block javascripts %}
+
+
+<script src="/static/assets/js/flot/jquery.flot.js"></script>
+<!-- FLOT RESIZE PLUGIN - allows the chart to redraw when the window is resized -->
+<script src="/static/assets/js/flot/jquery.flot.resize.js"></script>
+<!-- FLOT PIE PLUGIN - also used to draw donut charts -->
+<script src="/static/assets/js/flot/jquery.flot.pie.js"></script>
+<!-- FLOT CATEGORIES PLUGIN - Used to draw bar charts -->
+<script src="/static/assets/js/flot/jquery.flot.categories.js"></script>
+
+<!-- Page script -->
+<script>
+
+    $.ajax({
+        url: "/query_sensorData",   //对应flask中的路由
+        type: "POST", //请求方法
+        data: JSON.stringify({"time": $('#time-selection').val()}),   //传送的数据
+        dataType: "json", //传送的数据类型
+        success: function (data) {
+            display(data);
+        }
+    })
+
+    // function downloadStudentsExcel() {
+    //     // 假设后台下载Excel的路由是 /students/v1.0/excel
+    //     window.open("/students/v1.0/excel")
+    // }
+
+    // $('#download_data').click(function (){
+    //     //var w = window.open();
+    //     $.ajax({
+    //         url: "/download_sensorData",
+    //         type: "POST",
+    //         data: JSON.stringify({"time": $('#time-selection').val()}),
+    //         dataType: "json",
+    //         success: function (res) {
+    //             console.log(res)
+    //         }
+    //     })
+    // })
+
+    function download() {
+        var url = '/download_sensorData/'+$('#time-selection').val();
+        var xhr = new XMLHttpRequest();
+        xhr.open('GET', url, true);    // 也可以使用POST方式，根据接口
+        xhr.responseType = "blob";  // 返回类型blob
+        // 定义请求完成的处理函数，请求前也可以增加加载框/禁用下载按钮逻辑
+        xhr.onload = function () {
+            // 请求完成
+            if (this.status === 200) {
+                // 返回200
+                var blob = this.response;
+                var reader = new FileReader();
+                reader.readAsDataURL(blob);  // 转换为base64，可以直接放入a表情href
+                reader.onload = function (e) {
+                    // 转换完成，创建一个a标签用于下载
+                    var a = document.createElement('a');
+                    a.download = 'data.xlsx';
+                    a.href = e.target.result;
+                    $("body").append(a);  // 修复firefox中无法触发click
+                    a.click();
+                    $(a).remove();
+                }
+            }
+        };
+        // 发送ajax请求
+        xhr.send()
+    }
+
+
+    $('#time-selection').change(function () {
+
+        $.ajax({
+            url: "/query_sensorData",   //对应flask中的路由
+            type: "POST", //请求方法
+            data: JSON.stringify({"time": $(this).val()}),   //传送的数据
+            dataType: "json", //传送的数据类型
+            success: function (data) {
+                display(data);
+            }
+        })
+    });
+
+
+    function display(data) {
+        var sensordatas = data['sensordatas'];
+        var sensordatas_lenth = data['datalength'];
+
+        sensordatas = sensordatas.slice(2, -2);
+        data_array = sensordatas.split("}, {");
+        var temperature = [];
+        var humidity = [];
+        var windSpeed = [];
+        var windDirect = [];
+        for (var i = 0; i < sensordatas_lenth; i++) {
+            sensordatas_json = JSON.parse("{" + data_array[i] + "}")
+            temperature.push([i, sensordatas_json.temp]);
+            humidity.push([i, sensordatas_json.humidity]);
+            windSpeed.push([i, sensordatas_json.windSpeed]);
+            windDirect.push([i, sensordatas_json.windDirect]);
+        }
+        console.log(temperature);
+
+        /*
+        * temperature
+        * ----------
+        */
+
+        var line_temperature1 = {
+            data: temperature,
+            color: '#3c8dbc',
+            label: 'sensor1',
+        }
+        $.plot('#temperature', [line_temperature1], {
+            grid: {
+                hoverable: true,
+                borderColor: '#f3f3f3',
+                borderWidth: 2,
+                tickColor: '#f3f3f3'
+            },
+            series: {
+                shadowSize: 0,
+                lines: {
+                    show: true
+                },
+                points: {
+                    show: true
+                },
+                label: 'sensor1'
+            },
+            lines: {
+                fill: false,
+                color: ['#3c8dbc']
+            },
+            yaxis: {
+                show: true
+            },
+            xaxis: {
+                show: true
+            }
+        })
+        $('#temperature').bind('plothover', function (event, pos, item) {
+            if (item) {
+                var x = item.datapoint[0].toFixed(2);
+                var y = item.datapoint[1].toFixed(2);
+                $('#temperature-tooltip').html(item.series.label + ' of ' + x + ' = ' + y)
+                    .css({top: item.pageY + 5, left: item.pageX + 5})
+                    .fadeIn(200)
+            } else {
+                $('#temperature-tooltip').hide()
+            }
+        })
+        /* END TEMPERATURE */
+
+
+        /*
+         * humidity
+         * ----------
+         */
+        var line_data2 = {
+            data: humidity,
+            color: '#f56954',
+            label: 'sensor2'
+        }
+        $.plot('#humidity', [line_data2], {
+            grid: {
+                hoverable: true,
+                borderColor: '#f3f3f3',
+                borderWidth: 4,
+                tickColor: '#f3f3f3'
+            },
+            series: {
+                shadowSize: 0,
+                lines: {
+                    show: true
+                },
+                points: {
+                    show: true
+                },
+                label: 'humidity'
+            },
+            lines: {
+                fill: false,
+                color: ['#f56954']
+            },
+            yaxis: {
+                show: true
+            },
+            xaxis: {
+                show: true
+            }
+        })
+
+        //Initialize tooltip on hover
+        $('<div class="tooltip-inner" id="humidity-tooltip"></div>').css({
+            position: 'absolute',
+            display: 'none',
+            opacity: 0.8
+        }).appendTo('body')
+        $('#humidity').bind('plothover', function (event, pos, item) {
+
+            if (item) {
+                var x = item.datapoint[0].toFixed(2),
+                    y = item.datapoint[1].toFixed(2)
+
+                $('#humidity-tooltip').html(item.series.label + ' of ' + x + ' = ' + y)
+                    .css({top: item.pageY + 5, left: item.pageX + 5})
+                    .fadeIn(200)
+            } else {
+                $('#humidity-tooltip').hide()
+            }
+
+        })
+        /* END HUMIDITY */
+
+
+        /*
+         * wind-speed
+         * ----------
+         */
+        var line_data2 = {
+            data: windSpeed,
+            color: '#f56954',
+            label: 'sensor2'
+        }
+        $.plot('#wind-speed', [line_data2], {
+            grid: {
+                hoverable: true,
+                borderColor: '#f3f3f3',
+                borderWidth: 4,
+                tickColor: '#f3f3f3'
+            },
+            series: {
+                shadowSize: 0,
+                lines: {
+                    show: true
+                },
+                points: {
+                    show: true
+                },
+                label: 'wind-speed'
+            },
+            lines: {
+                fill: false,
+                color: ['#f56954']
+            },
+            yaxis: {
+                show: true
+            },
+            xaxis: {
+                show: true
+            }
+        })
+
+        //Initialize tooltip on hover
+        $('<div class="tooltip-inner" id="wind-speed-tooltip"></div>').css({
+            position: 'absolute',
+            display: 'none',
+            opacity: 0.8
+        }).appendTo('body')
+        $('#wind-speed').bind('plothover', function (event, pos, item) {
+
+            if (item) {
+                var x = item.datapoint[0].toFixed(2),
+                    y = item.datapoint[1].toFixed(2)
+
+                $('#wind-speed-tooltip').html(item.series.label + ' of ' + x + ' = ' + y)
+                    .css({top: item.pageY + 5, left: item.pageX + 5})
+                    .fadeIn(200)
+            } else {
+                $('#wind-speed-tooltip').hide()
+            }
+
+        })
+        /* END WIND SPEED */
+
+
+        /*
+         * wind-direction
+         * ----------
+         */
+        var line_data2 = {
+            data: windDirect,
+            color: '#f56954',
+            label: 'sensor2'
+        }
+        $.plot('#wind-direction', [line_data2], {
+            grid: {
+                hoverable: true,
+                borderColor: '#f3f3f3',
+                borderWidth: 4,
+                tickColor: '#f3f3f3'
+            },
+            series: {
+                shadowSize: 0,
+                lines: {
+                    show: true
+                },
+                points: {
+                    show: true
+                },
+                label: 'wind-direction'
+            },
+            lines: {
+                fill: false,
+                color: ['#f56954']
+            },
+            yaxis: {
+                show: true
+            },
+            xaxis: {
+                show: true
+            }
+        })
+
+        //Initialize tooltip on hover
+        $('<div class="tooltip-inner" id="wind-direction-tooltip"></div>').css({
+            position: 'absolute',
+            display: 'none',
+            opacity: 0.8
+        }).appendTo('body')
+        $('#wind-direction').bind('plothover', function (event, pos, item) {
+
+            if (item) {
+                var x = item.datapoint[0].toFixed(2),
+                    y = item.datapoint[1].toFixed(2)
+
+                $('#wind-direction-tooltip').html(item.series.label + ' of ' + x + ' = ' + y)
+                    .css({top: item.pageY + 5, left: item.pageX + 5})
+                    .fadeIn(200)
+            } else {
+                $('#wind-direction-tooltip').hide()
+            }
+
+        })
+        /* END WIND DIRECTION */
+
+        /*
+         * Custom Label formatter
+         * ----------------------
+         */
+        function labelFormatter(label, series) {
+            return '<div style="font-size:13px; text-align:center; padding:2px; color: #fff; font-weight: 600;">'
+                + label
+                + '<br>'
+                + Math.round(series.percent) + '%</div>'
+        }
+
+    }
+
+
+</script>
+
+{% endblock %}
